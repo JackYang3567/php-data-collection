@@ -1,0 +1,12 @@
+{
+    "name": "caiji_plus",
+    "authors": [
+        {
+            "name": "jiang",
+            "email": "xxx@qq.com"
+        }
+    ],
+    "require": {
+        "jaeger/querylist": "^4.1"
+    }
+}

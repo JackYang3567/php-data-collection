@@ -1,0 +1,104 @@
+1、配置彩种说明：
+
+  新加彩种采集，根据新加彩种所属彩种大类加入到相应的彩种大类规则配置，例如 天津时时彩 属时时彩大类，采集规则配置写在 ssc.php 配置文件里，如果不属于任何大类，则采集规则配置在 other.php 配置文件里。
+
+2、配置文件说明：
+
+  dpc       低频彩类
+  klsf      快乐十分/农场类
+  ks        快3类
+  lhc       六合彩类
+  lottery28 28类
+  other     其他类
+  pk10      pk10/赛车/飞艇类
+  ssc       时时彩类
+  syxw      十一选五类
+
+3、配置详情使用：
+  
+    一、公共配置：
+
+      // 如果设置为自动开奖，在这里配置自动开奖号码配置
+      'code_config' => [
+        // 开奖号最小号
+        'min' => 1,
+        // 开奖号码最大号
+        'max' => 49,
+        // 开奖号码位数
+        'num' => 7,
+        // 开奖号小于10 时，号码前面是否加0
+        'is' => true,
+        // 当期开奖号码是否重复
+        'repeat' => true
+      ],
+      // 数据放入的表
+      'table' => 'code',
+      // 数据放入表的字段
+      'field' => 'code,expect,time',
+      // 数据标识
+      'type' => 'ssq',
+      // 见下面配置说明
+      'list' => []
+
+    二、list 参数配置
+
+        三种采集目标
+
+          1、html采集方式 用的php QueryList 插件采集,详情使用 http://www.querylist.cc
+              [
+                // 采集地址
+                'url' => 'www.xx.com',
+                // 采集方式，这里配置html
+                'mode' => 'html',
+                // 要采集包含所以采集内容的父标签
+                'range' => '#data-tab>tr',
+                // 如果这项放在最前面，并设置这个参数为 true，则进入测试模式，只执行采集这一项并显示所有采集数据，数据不会入库
+                'test' => true,
+                // 采集字段就是要存入数据库的字段,与上面 field(数据放入表的字段)要对上
+                'rules' => [
+                  'code' => ['span','text',null,function($content){
+                      // 采集的单个数据需要做处理的在这个回调里处理，并且返回处理后的数据
+                      return $content;
+                    }],
+                  'expect' => ['td:eq(0)','text',null,function($content){
+                      // 采集的单个数据需要做处理的在这个回调里处理，并且返回处理后的数据
+                      return $content;
+                    }],
+                  'time' => ['td:eq(1)','text',null,function($content){
+                      // 采集的单个数据需要做处理的在这个回调里处理，并且返回处理后的数据
+                      return $content;
+                    }]
+                ],
+                'callback' => function($data){
+                  // 采集的所有数据需要做处理的在这个回调里处理，并且返回处理后的数据
+                  return $content;
+                }
+              ]
+
+          2、xml采集方式
+            [
+              // 采集地址
+              'url' => 'www.xx.com',
+              // 采集方式 这里配置 xml
+              'mode' => 'xml',
+              // 如果这项放在最前面，并设置这个参数为 true，则进入测试模式，只执行采集这一项并显示所有采集数据，数据不会入库
+              'test' => true,
+              // 采集后的数据做处理并返回处理结果，是个二维数组，有多少个一维就是多少条数据，二维下是 对应到要入库的字段,与上面 field(数据放入表的字段)要对上
+              'callback' => function($data){
+                  return $data;
+                }
+            ]
+
+          3、json采集方式
+            [
+              // 采集地址
+              'url' => 'www.xx.com',
+              // 采集方式 这里配置 json
+              'mode' => 'json',
+              // 如果这项放在最前面，并设置这个参数为 true，则进入测试模式，只执行采集这一项并显示所有采集数据，数据不会入库
+              'test' => true,
+              // 采集后的数据做处理并返回处理结果，是个二维数组，有多少个一维就是多少条数据，二维下是 对应到要入库的字段,与上面 field(数据放入表的字段)要对上
+              'callback' => function($data){
+                  return $data;
+              }
+            ]
