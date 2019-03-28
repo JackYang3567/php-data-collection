@@ -8,7 +8,6 @@
         'num' => 3,
         'is' => false
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'jisuks',
       'list' => [
@@ -22,7 +21,6 @@
         'num' => 3,
         'is' => false
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'xyks',
       'list' => [
@@ -36,7 +34,6 @@
         'num' => 3,
         'is' => false
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'tjks',
       'list' => [
@@ -44,7 +41,6 @@
       ]
     ],
     'jsks' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'jsks',
       'list' => [
@@ -116,7 +112,6 @@
       ]
     ],
     'ahks' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'ahks',
       'list' => [
@@ -163,7 +158,6 @@
       ]
     ],
     'bjks' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'bjks',
       'list' => [
@@ -209,7 +203,6 @@
       ]
     ],
     'gsks' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'gsks',
       'list' => [
@@ -231,7 +224,6 @@
       ]
     ],
     'hebks' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'hebks',
       'list' => [
@@ -253,7 +245,6 @@
       ]
     ],
     'hubks' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'hubks',
       'list' => [
@@ -275,7 +266,6 @@
       ]
     ],
     'jlks' => [
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'jlks',
       'list' => [
@@ -322,7 +312,6 @@
       ]
     ],
     'gxks' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'gxks',
       'list' => [
@@ -369,7 +358,6 @@
       ]
     ],
     'shks' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'shks',
       'list' => [
@@ -381,7 +369,7 @@
                 foreach ($data as $key => $value) {
                   $return_data[] = [
                     'code' => $value['number'],
-                    'expect' => (substr((substr(date('Y'),0,2) . $key),0,8) . substr($key,-2)),
+                    'expect' => (substr((substr(date('Y'),0,2) . $key),0,8) . substr($key,-3)),
                     'time' => $value['dateline']
                   ];
                 }
@@ -399,7 +387,8 @@
                       }
                       return $data;
                   }],
-                'expect' => ['td:eq(1)','text']
+                'expect' => ['td:eq(1)','text'],
+                'time' => date('Y-m-d H:i:s')
               ],
               'callback' => function($data){
                 return $data;

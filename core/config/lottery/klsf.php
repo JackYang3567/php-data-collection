@@ -2,7 +2,6 @@
 
   return [
     'xync' => [
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'xync',
       'list' => [
@@ -24,7 +23,6 @@
       ]
     ],
   //  'gxklsf' => [
-  //    'table' => 'code1',
   //    'field' => 'code,expect,time',
   //    'type' => 'gxklsf',
   //    'list' => [
@@ -46,7 +44,6 @@
   //     ]
   //  ],
   'gxklsf' => [
-    'table' => 'code1',
     'field' => 'code,expect,time',
     'type' => 'gxklsf',
     'list' => [

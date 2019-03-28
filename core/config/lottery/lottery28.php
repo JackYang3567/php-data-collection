@@ -9,7 +9,6 @@
         'is' => false,
         'repeat' => false
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'dm28',
       'list' => [
@@ -24,7 +23,6 @@
         'is' => false,
         'repeat' => false
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'trq28',
       'list' => [
@@ -32,7 +30,6 @@
       ]
     ],
     'bj28' => [
-        'table' => 'code1',
         'field' => 'code,expect,time',
         'type' => 'bj28',
         'list' => [
@@ -77,7 +74,6 @@
         ]
     ],
     'jnd28' => [
-        'table' => 'code1',
         'field' => 'code,expect,time',
         'type' => 'jnd28',
         'list' => [

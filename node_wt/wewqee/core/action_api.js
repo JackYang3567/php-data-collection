@@ -59,7 +59,7 @@ Main.fn.gamePrize = function() {
 }
 
 Main.fn.actionData = function() {
-    var day = 1, // 保留的数据的天数
+    var day = 2, // 保留的数据的天数
         is_day = (Date.parse(new Date()) / 1000) - (day * 24 * 60 * 60);
     Conn.query("DELETE FROM lottery_code WHERE type <> 21 AND type <> 19 AND type <> 22 AND create_time < " + is_day, function(err) {
         if (err) {

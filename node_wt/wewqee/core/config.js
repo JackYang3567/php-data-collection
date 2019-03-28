@@ -121,10 +121,10 @@ var config = {
                 category: 'pk10'
             },
             ydwpk10: {
-                time: '00:00:30',
-                expects: 959,
-                cha: 1.5,
-                name: '1.5分PK10',
+                time: '00:13:05',
+                expects: 180,
+                cha: 5,
+                name: '1.5分PK10 飞艇',
                 type: 4,
                 category: 'pk10'
             },

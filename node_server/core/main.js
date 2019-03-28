@@ -2,7 +2,8 @@
     colors = require('colors'),
     fs = require('fs'),
     ini = require('ini'),
-    Info = ini.parse(fs.readFileSync('../config.ini', 'UTF-8')).system;
+    path = require('path'),
+    Info = ini.parse(fs.readFileSync(path.resolve(__dirname, '../../') + '/config.ini','UTF-8' )).system;
 
 Date.prototype.Format = function(fmt) {
     var o = {
@@ -37,37 +38,55 @@ Main.fn.getData = function() {
                 //console.log(_this.data);
             });
             res.on('timeout', function() {
-                console.log(colors.red('--> [ ' + _this.name + ' ] 请求超时 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+                if(Info.tips == 0){
+                    console.log(_this.url);
+                    console.log(colors.red('--> [ ' + _this.name + ' ] 请求超时 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+                }
             });
             res.on("end", function() {
                 clearTimeout(request_timer);
-                if (_this.data == '999') {
-                    console.log(colors.red('--> [ ' + _this.name + ' ] 没有配置采集目标地址 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
-                    return;
-                }
                 try {
                     _this.data = eval('(' + _this.data + ')');
-                    if (_this.data.length > 0) {
-                        for (var i = 0, j = _this.data.length; i < j; i++) {
-                            console.log(colors.green('--> [ ' + _this.name + ' ] [ ' + _this.data[i].expect + ' ] 开奖采集成功 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+                        if(_this.data.code){
+                            _this.data = _this.data.data;
+                        
+                        if (_this.data.length > 0) {
+                            for (var i = 0, j = _this.data.length; i < j; i++) {
+                                console.log(colors.green('--> [ ' + _this.name + ' ] [ ' + _this.data[i].expect + ' ] 开奖采集成功 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+                            }
+                        } else {
+                            if(Info.tips == 0){
+                                console.log(_this.url);
+                                console.log('--> [ ' + _this.name + ' ] [ ' + _this.expect + ' ] ' + Info.time + '秒后重新发起采集 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
+                            }
                         }
-                    } else {
-                        console.log('--> [ ' + _this.name + ' ] [ ' + _this.expect + ' ] ' + Info.time + '秒后重新发起采集 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
+                    }else{
+                        if(Info.tips == 0){
+                            console.log(_this.url);
+                            console.log(colors.red('--> [ ' + _this.name + ' ] ' + _this.data.msg + ' [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+                        }
                     }
                 } catch (error) {
-                    console.log(_this.url);
-                    console.log(colors.red('--> [ ' + _this.name + ' ] 采集出错,程序再次执行采集 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+                    if(Info.tips == 0){
+                        //console.log(_this.url);
+                        console.log(colors.red('--> [ ' + _this.name + ' ] 请查看采集源或者采集规则是否有误 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+                    }
                 }
             });
         }).on('error', function(e) {
-            console.log(_this.url);
-            console.log('--> [ ' + _this.name + ' ] 采集出错：' + e + ' [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
+            if(Info.tips == 0){
+                console.log(_this.url);
+                console.log('--> [ ' + _this.name + ' ] 采集出错：' + e + ' [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
+            }
         });
     var request_timer = setTimeout(function() {
         req.abort();
     }, Info.abort_time * 1000);
     req.on("abort", function() {
-        console.log(colors.red('--> [ ' + _this.name + ' ] 超过预定时间,终止了任务并再次执行 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+        if(Info.tips == 0){
+            console.log(_this.url);
+            console.log(colors.red('--> [ ' + _this.name + ' ] 超过预定时间,终止了任务并再次执行 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+        }
     });
 };
 Main.fn.main = function() {

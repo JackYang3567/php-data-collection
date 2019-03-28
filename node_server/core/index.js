@@ -1,53 +1,41 @@
 var Main = require("./main").Main,
     Config = require("./config").config,
-    Conn = require("./conn").conn,
     fs = require('fs'),
     ini = require('ini'),
+    Conn = require("./conn").conn,
     path = require('path'),
-    Info = ini.parse(fs.readFileSync(path.resolve(__dirname, '../../') + '/config.ini','UTF-8' )).system;
+    info_data = ini.parse(fs.readFileSync(path.resolve(__dirname, '../../') + '/config.ini','UTF-8' )),
+    Info = info_data.system,
+    redis = require('redis'),
+    redis_client = redis.createClient(info_data.redis.port,info_data.redis.host,(info_data.redis.password ? { 'password': info_data.redis.password } : {}));
+
 // 缓存最近数据期号
 var chat_expect = {
     cp: {},
     article: {},
-    image: {},
-    catch_time: 0
+    image: {}
 };
 
 function runAsync(callback, Main_obj) {
-    Conn.query("SELECT expect,time FROM " + Main_obj.table + " WHERE type='" + Main_obj.type + "' ORDER BY expect DESC LIMIT 0,1", function(err, rows, fields) {
-        var _expect = rows.length > 0 ? rows[0]['expect'] : 0;
-        // console.log(_expect);
-        callback([_expect, (_expect ? rows[0]['time'] : '1970-01-01 00:00:00')], Main_obj);
+    redis_client.hget('collection_server_data',Main_obj.type,function(err,value){
+        if(err){
+            return;
+        }
+        value = JSON.parse(value);
+        let _time = '1970-01-01 00:00:00',
+            _expect = 0;
+        if(value && value.length){
+            _expect = value[value.length - 1].expect;
+            _time = value[value.length - 1].time;
+        }
+        callback([_expect, _time], Main_obj);
     });
 }
 
 function action() {
-    var project = Info['project'].split(','),
+    var project = ['cp'],
         _time_config = Config.time,
         now_expect;
-    // 这里是每天到了12点,执行保留数据
-    if (chat_expect['catch_time'] == 0 || (new Date().Format('hh:mm:ss') > '23:59:00' && new Date().Format('yyyyMMdd') > chat_expect['catch_time'])) {
-        chat_expect['catch_time'] = new Date().Format('yyyyMMdd');
-        var day = 2, // 保留的数据的天数
-            is_day = new Date();
-        is_day.setDate(is_day.getDate() - day);
-        is_day = is_day.Format('yyyy-MM-dd hh:mm:ss');
-        Conn.query("DELETE FROM code WHERE time < '" + is_day + "'", function(err) {
-            if (err) {
-                console.log(err);
-                console.log('--> code执行保留' + day + '天的开奖数据操作失败！！！ [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
-            } else {
-                console.log('--> code执行保留' + day + '天的开奖数据操作成功 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
-            }
-        });
-        Conn.query("DELETE FROM code1 WHERE time < '" + is_day + "'", function(err) {
-            if (err) {
-                console.log('--> code1执行保留' + day + '天的开奖数据操作失败！！！ [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
-            } else {
-                console.log('--> code1执行保留' + day + '天的开奖数据操作成功 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
-            }
-        });
-    }
     for (var i in project) {
         _type_array = Info[project[i]].split(',');
         for (var j = 0, k = _type_array.length; j < k; j++) {
@@ -151,4 +139,27 @@ function getNowExpect(_time_config, type, project) {
         return get_num;
     }
 }
-action();
+
+/**
+ *  这里第一次执行时，初始化缓存数据
+ */
+_type_array = Info['cp'].split(',');
+redis_client.del('collection_server_data');
+_all_lottery = 0;
+for (let j = 0, k = _type_array.length; j < k; j++) {
+    Conn.query("SELECT expect,code,time FROM code WHERE type='" + _type_array[j] + "' ORDER BY Id DESC LIMIT 10", function(err, rows) {
+        if(err || rows.length < 1){
+            _data = [];
+        }else{
+            _data = rows.reverse();
+        }
+        redis_client.hset('collection_server_data',_type_array[j],JSON.stringify(_data),function(err,v){
+            _all_lottery++;
+            if(_all_lottery == _type_array.length){
+                console.log('--> 采集器启动成功');
+                action();
+            }
+        });
+    });
+}
+

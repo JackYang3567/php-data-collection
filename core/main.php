@@ -1,6 +1,5 @@
 <?php
 namespace core;
-use core\base\conn;
 use QL\QueryList;
 
 class main
@@ -9,11 +8,6 @@ class main
   public $config = [];
   // 程序运行临时性的数据
   public $chat_data = [];
-
-  public function __construct()
-  {
-    $this->conn = Conn::mysqlConn();
-  }
 
   public function curlAction()
   {
@@ -40,11 +34,15 @@ class main
   public function insertData(){
       if(count($this->chat_data['insert_data']) > 0){
         $insert_data = join(',',$this->chat_data['insert_data']);
-        // print_r("INSERT INTO {$this->config['table']} ({$this->config['field']},type) VALUES {$insert_data}");
-        $num = $this->conn->exec("INSERT INTO {$this->config['table']} ({$this->config['field']},type) VALUES {$insert_data}");
+        // print_r("INSERT INTO code ({$this->config['field']},type) VALUES {$insert_data}");
+        $num = $this->chat_data['conn']->exec("INSERT INTO code ({$this->config['field']},type) VALUES {$insert_data}");
         if(empty($num)){
           $this->chat_data['new_data'] = [];
         }
+        /** 更新缓存最新旗号 */
+        $is_data = array_merge($this->chat_data['redis_data'], $this->chat_data['new_data']);
+        $data = json_encode(array_slice($is_data,-10));
+        $this->chat_data['redis']->hset('collection_server_data', $this->config['type'], $data);
         // print_r("添加了{$num}条数据");
         return $num;
       }
@@ -54,16 +52,17 @@ class main
   {
     $data = $this->chat_data['config']['callback']($this->chat_data['data']);
     if(!empty($data)){
-      $db_data = $this->conn->query("SELECT expect FROM {$this->config['table']} WHERE type='{$this->config['type']}' ORDER BY Id DESC LIMIT 0,1")->fetch(\PDO::FETCH_ASSOC);
-      if($db_data){
-          $db_data = $db_data['expect'];
-      }else{
-          $db_data = $data[0]['expect'] - 1;
+      $db_data = json_decode($this->chat_data['redis']->hget('collection_server_data', $this->config['type']),true);
+      $this->chat_data['redis_data'] = $db_data;
+      if(count($db_data)){
+        $db_data = $db_data[count($db_data)-1]['expect'];
+      } else {
+        $db_data = 0;
       }
       // print_r($db_data); // 这里是最新的期数
       foreach ($data as $value) {
         // 这里判断开奖号码为 -,-,- 情况为开奖中，避免采集到
-        if(($value['expect'] > $db_data || (isset($this->chat_data['config']['test']) && $this->chat_data['config']['test'])) && strpos($value['code'],'-,-') === false){
+        if(((intval($value['expect']) == '' ? 0 : $value['expect']) > $db_data || (isset($this->chat_data['config']['test']) && $this->chat_data['config']['test'])) && strpos($value['code'],'-,-') === false && $value['code'] != ''){
           $this->chat_data['new_data'][] = $value;
           $_value = array_values($value);
           $_value[] = $this->config['type'];

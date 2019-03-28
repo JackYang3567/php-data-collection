@@ -2,7 +2,6 @@
 
   return [
       'ssc' => [
-        'table' => 'code',
         'field' => 'code,expect,time',
         'type' => 'ssc',
         'list' => [
@@ -54,7 +53,6 @@
          ]
       ],
       'hnwfc' => [
-        'table' => 'code',
         'field' => 'code,expect',
         'type' => 'hnwfc',
         'list' => [
@@ -112,7 +110,6 @@
           'num' => 5,
           'is' => false
         ],
-        'table' => 'code',
         'field' => 'code,expect,time',
         'type' => 'ffc',
         'list' => [
@@ -140,7 +137,6 @@
           'num' => 5,
           'is' => false
         ],
-        'table' => 'code1',
         'field' => 'code,expect,time',
         'type' => 'ajc',
         'list' => [
@@ -168,7 +164,6 @@
           'num' => 5,
           'is' => false
         ],
-        'table' => 'code',
         'field' => 'code,expect,time',
         'type' => 'efc',
         'list' => [
@@ -196,7 +191,6 @@
           'num' => 5,
           'is' => false
         ],
-        'table' => 'code',
         'field' => 'code,expect,time',
         'type' => 'wfc',
         'list' => [
@@ -225,7 +219,6 @@
          ]
       ],
       'qqffc' => [
-        'table' => 'code1',
         'field' => 'code,expect,time',
         'type' => 'qqffc',
         'list' => [
@@ -247,7 +240,6 @@
          ]
       ],
       'tjssc' => [
-        'table' => 'code',
         'field' => 'code,expect,time',
         'type' => 'tjssc',
         'list' => [
@@ -292,7 +284,6 @@
          ]
       ],
       'xjssc' => [
-        'table' => 'code',
         'field' => 'code,expect,time',
         'type' => 'xjssc',
         'list' => [

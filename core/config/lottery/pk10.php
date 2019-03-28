@@ -9,7 +9,6 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'xysc',
       'list' => [
@@ -38,25 +37,24 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'ydwpk10',
       'list' => [
-          [
-              'url' => 'http://api.caipiaokong.cn/lottery/?name=xdlpks&format=json&uid=729281&token=5214eea2f16b8335cb9c08c1215bc3d4dc285a31',
-              'mode' => 'json',
-              'callback' => function($data){
-                $return_data = [];
-                foreach ($data as $key => $value) {
-                  $return_data[] = [
-                    'code' => $value['number'],
-                    'expect' => $key,
-                    'time' => $value['dateline']
-                  ];
+        [
+            'url' => 'http://api.b1api.com/api?p=json&t=xyft&limit=1&token=6466E8F63C89A346',
+            'mode' => 'json',
+            'callback' => function($data){
+              $return_data = [];
+              foreach ($data['data'] as $key => $value) {
+                    $return_data[] = [
+                        'code' => $value['opencode'],
+                        'expect' => $value['expect'],
+                        'time' => $value['opentime']
+                    ];
                 }
-                return array_reverse($return_data);
-              }
-          ]
+              return array_reverse($return_data);
+            }
+        ]
       ]
     ],
     'klpk10' => [
@@ -67,7 +65,6 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'klpk10',
       'list' => [
@@ -96,7 +93,6 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'jisuft',
       'list' => [
@@ -125,7 +121,6 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'yfsc',
       'list' => [
@@ -154,7 +149,6 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'xypk10',
       'list' => [
@@ -183,7 +177,6 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'xjpsm',
       'list' => [
@@ -205,7 +198,6 @@
       ]
     ],
     'bjpk10' => [
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'bjpk10',
       'list' => [

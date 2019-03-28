@@ -2,7 +2,6 @@
 
   return [
     'sxsyxw' => [
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'sxsyxw',
       'list' => [
@@ -31,7 +30,6 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'jisusyxw',
       'list' => [
@@ -60,7 +58,6 @@
         'is' => true,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'xysyxw',
       'list' => [
@@ -82,7 +79,6 @@
       ]
     ],
     'shsyxw' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'shsyxw',
       'list' => [
@@ -104,7 +100,6 @@
       ]
     ],
     'gdsyxw' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'gdsyxw',
       'list' => [
@@ -167,7 +162,6 @@
       ]
     ],
     'zjsyxw' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'zjsyxw',
       'list' => [
@@ -196,7 +190,6 @@
       ]
     ],
     'syydj' => [
-      'table' => 'code',
       'field' => 'code,expect,time',
       'type' => 'syydj',
       'list' => [

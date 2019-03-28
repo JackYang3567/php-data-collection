@@ -1,6 +1,10 @@
 <?php
+  $return_data = [
+    'code' => 0,
+    'msg' => 'error'
+  ];
   if(!isset($_GET["type"]) || !isset($_GET["project"])){
-    echo '欢迎您的光临';
+    echo json_encode($return_data);
     die;
   }
   use core\base\conn;
@@ -10,11 +14,17 @@
   lottery::$type = $type;
   $config = lottery::getConfig();
   if(!$config){
-    echo 'Nothing';
-    return;
+    $return_data['msg'] = '没有找到这个彩种';
+    echo json_encode($return_data);
+    die;
   }
-  !strpos($config['field'],'time') && ($config['field'] .= ',time');
-  $take = 10;
-  isset($_GET["take"]) && ($take = intval($_GET["take"]));
-  $db_data = conn::mysqlConn()->query("SELECT {$config['field']} FROM {$config['table']} WHERE type='{$config['type']}' ORDER BY Id DESC LIMIT 0,{$take}")->fetchAll(\PDO::FETCH_ASSOC);
-  echo "===";//json_encode(array_reverse($db_data));
+  $db_data = conn::redisConn()->hget('collection_server_data', $type);
+  if(empty($db_data)){
+    $return_data['msg'] = '没有开启这个彩种';
+    echo json_encode($return_data);
+    die;
+  }
+  $return_data['code'] = 1;
+  $return_data['msg'] = 'success';
+  $return_data['data'] = json_decode($db_data,true);
+  echo (isset($_GET["compatible"]) ? json_encode($return_data) : json_encode($return_data['data']));

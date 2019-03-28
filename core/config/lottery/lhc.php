@@ -9,7 +9,6 @@
           'is' => true,
           'repeat' => true
         ],
-        'table' => 'code1',
         'field' => 'code,expect,time',
         'type' => 'jslhc',
         'list' => [
@@ -41,7 +40,6 @@
       ]
     ],
     'lhc' => [
-        'table' => 'code1',
         'field' => 'code,expect',
         'type' => 'lhc',
         'list' => [

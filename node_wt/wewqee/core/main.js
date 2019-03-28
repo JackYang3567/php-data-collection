@@ -14,22 +14,27 @@ function Main() {
     this.expect = '';
     this.name = '';
     this.url = '';
+    this.redis_client;
 };
 
 Main.fn = Main.prototype;
 
 Main.fn.getData = function() {
+
     if ('attendue' in this) {
         this.data = this.attendue;
+
         this.getNewData();
         return;
     }
+
     var _this = this,
         req = http.get(_this.url, function(res) {
             res.on('data', function(data) {
                 _this.data += data.toString();
                 // console.log(_this.data);
             });
+		
             res.on('timeout', function() {
                 if (Info.action_tip == '0') {
                     console.log(colors.red('--> [ ' + _this.name + ' ] 请求超时 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
@@ -37,24 +42,25 @@ Main.fn.getData = function() {
             });
             res.on("end", function() {
                 clearTimeout(request_timer);
-                if (_this.data == 'Nothing') {
-                    if (Info.action_tip == '0') {
-                        console.log(colors.red('--> [ ' + _this.name + ' ] 没有配置采集目标地址 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
-                    }
-                    return;
-                }
                 try {
                     _this.data = eval('(' + _this.data + ')');
-                    _this.getNewData();
+                    if(_this.data.code){
+                        _this.getNewData();
+                    }else{
+                        if (Info.action_tip == '0') {
+                            console.log(colors.red('--> [ ' + _this.name + ' ] ' + _this.data.msg + ' [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+                        }
+                    }
                 } catch (error) {
                     if (Info.action_tip == '0') {
-                        console.log(error);
+                        console.log(_this.url);
                         console.log(colors.red('--> [ ' + _this.name + ' ] 采集出错,程序再次执行采集 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
                     }
                 }
             });
         }).on('error', function(e) {
             if (Info.action_tip == '0') {
+                console.log(_this.url);
                 console.log('--> [ ' + _this.name + ' ] 采集出错：' + e + ' [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
             }
         });
@@ -70,16 +76,19 @@ Main.fn.getData = function() {
 
 Main.fn.getNewData = function() {
     // 获得最新数据
+    //console.log(this.data);
+    this.data = this.data.data;
     var _this = this,
-        now_date = parseInt(new Date().getTime() / 1000),
         _add_data = [];
-    for (var i = 0, j = _this.data.length, _expect, is_reg; i < j; i++) {
+    for (var i = 0, j = _this.data.length, _expect; i < j; i++) {
         _expect = _this.data[i].expect;
+
         if (parseInt(_expect) > parseInt(_this.expect)) {
             _add_data.push(_this.data[i]);
             _this.add_data.push("('" + _this.data[i].expect + "','" + _this.data[i].code.replace(/-,/g, '') + "','" + _this.bm + "','" + (new Date(_this.data[i].time).getTime() / 1000) + "')");
         }
     }
+
     if (_this.add_data.length > 0) {
         _this.data = _add_data;
         _this.addData();
@@ -93,7 +102,7 @@ Main.fn.getNewData = function() {
 Main.fn.addData = function() {
     // 将最新数据入库
     var _this = this;
-    Conn.query('INSERT lottery_code (expect,content,type,create_time) VALUES ' + _this.add_data.join(','), function(err) {
+    Conn.query('INSERT INTO lottery_code (expect,content,type,create_time) VALUES ' + _this.add_data.join(','), function(err) {
         if (err) {
             if (Info.action_tip == '0') {
                 console.log(colors.red('数据入库失败'));
@@ -101,21 +110,25 @@ Main.fn.addData = function() {
             }
             return;
         }
-        for (var i = 0, j = _this.data.length, _expect, is_reg; i < j; i++) {
+       
+        for (var i = 0, j = _this.data.length; i < j; i++) {
             console.log(colors.green('--> [ ' + _this.name + ' ] [ ' + _this.data[i].expect + '期 ] 获得开奖数据 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
-            _this.prize(_this.data[i].expect);
+            _this.prize(_this.data[i].expect,_this.bm,_this.category);
             // 这里是 新疆28 和 重庆 28 派奖
             if (_this.bm == 2 || _this.bm == 12) {
-                _this.category = 'pc28';
-                _this.bm = (_this.bm == 2 ? 26 : 27);
-                _this.prize(_this.data[i].expect);
+                _this.prize(_this.data[i].expect,(_this.bm == 2 ? 26 : 27),'pc28');
             }
         }
+        _this.redis_client.hset('collection_client_data_' + Info['local'],_this.bm,JSON.stringify(_this.data[_this.data.length - 1]),function(err){
+            if (Info.action_tip == '0' && !err) {
+                console.log(colors.green('--> [ ' + _this.name + ' ] 缓存数据更新成功 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
+            }
+        });
     });
 };
-Main.fn.prize = function(is_expect,list = 0) {
-    var _this = this;
-    http.get('http://' + Info.local + '/prize/' + _this.category + '/prize/expect/' + is_expect + '/type/' + _this.bm, function(res) {
+Main.fn.prize = function(is_expect,is_bm,category) {
+    var _this = this,list = 0;
+    http.get('http://' + Info.local + '/prize/' + category + '/prize/expect/' + is_expect + '/type/' + is_bm, function(res) {
         var is_data;
         res.on('data', function(data) {
             is_data = data.toString();
@@ -128,13 +141,13 @@ Main.fn.prize = function(is_expect,list = 0) {
                     console.log(colors.green('--> [ 执行派奖 ] ' + is_data.msg + ' [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
 
                     // PC28系列是晚上23:59分一次性返水
-                    if (_this.bm != 21) {
+                    if (is_bm != 21) {
                         return;
                     }
 
                     /** 这里是执行返水 **/
 
-                    http.get('http://' + Info.local + '/Home/return_money/Back/expect/' + is_expect + '/type/' + _this.bm, function(res) {
+                    http.get('http://' + Info.local + '/Home/return_money/Back/expect/' + is_expect + '/type/' + is_bm, function(res) {
                         var is_data;
                         res.on('data', function(data) {
                             is_data = data.toString();
@@ -162,7 +175,7 @@ Main.fn.prize = function(is_expect,list = 0) {
                     console.log('--> [ 执行派奖 ] ' + is_data.msg + ' [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']');
                 }
             } catch (e) {
-                console.log('http://' + Info.local + '/prize/' + _this.category + '/prize/expect/' + is_expect + '/type/' + _this.bm);
+                console.log('http://' + Info.local + '/prize/' + category + '/prize/expect/' + is_expect + '/type/' + is_bm);
                 console.log(e);
                 console.log(colors.red('--> [ 执行派奖 ] [ ' + _this.name + ' ] 派奖出错，未能执行派奖 [' + new Date().Format('yyyy-MM-dd hh:mm:ss') + ']'));
             }
@@ -177,7 +190,8 @@ Main.fn.prize = function(is_expect,list = 0) {
 }
 Main.fn.main = function() {
     var _this = this;
-    _this.url = 'http://' + _this.url + '/?project=' + _this.project + '&type=' + _this.type;
+    _this.url = 'http://' + _this.url + '/?project=' + _this.project + '&type=' + _this.type + '&compatible=1';
+
     _this.getData();
 };
 exports.Main = Main;

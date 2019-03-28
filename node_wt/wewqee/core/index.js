@@ -7,28 +7,35 @@ var Main = require("./main").Main,
     fs = require('fs'),
     ini = require('ini'),
     path = require('path'),
-    Info = ini.parse(fs.readFileSync(path.resolve(__dirname, '../') + '/config.ini','UTF-8' )).system;
+    info_data = ini.parse(fs.readFileSync(path.resolve(__dirname, '../') + '/config.ini','UTF-8' )),
+    Info = info_data.system,
+    redis = require('redis'),
+    redis_client = redis.createClient(info_data.redis.port,info_data.redis.host,(info_data.redis.password ? { 'password': info_data.redis.password } : {}));
+
     // 缓存最近数据期号
     var chat_expect = { cp: {}, host: 0, other: { jczq: 0 }, catch_time: 0 };
     action_api = new action_api;
 
 function runAsync(callback, Main_obj) {
     // 这里查询数据库最新一期并缓存起来
-    Conn.query("SELECT expect,create_time FROM lottery_code WHERE type=" + Main_obj.bm + " ORDER BY expect DESC LIMIT 0,1", function(err, rows, fields) {
-        var _expect = rows.length > 0 ? rows[0]['expect'] : 0,
-            _is_time = (_expect ? new Date(rows[0]['create_time'] * 1000).Format('yyyy-MM-dd hh:mm:ss') : 0);
+    redis_client.hget('collection_client_data_' + Info['local'],Main_obj.bm,function(err,value){
+        if(err){
+            return;
+        }
+        value = JSON.parse(value);
         // 这里查询预设开奖表是否有预设,如果有的话就按预设表开奖
-        Conn.query("SELECT content FROM preset_lottery_code WHERE type=" + Main_obj.bm + " AND expect=" + (parseInt(_expect) + 1), function(err, rows) {       
-            if (rows.length > 0) {
-                Main_obj.attendue = [{ expect: (parseInt(_expect) + 1), code: rows[0]['content'], time: new Date().Format('yyyy-MM-dd hh:mm:ss') }];
+        Conn.query("SELECT content FROM preset_lottery_code WHERE type=" + Main_obj.bm + " AND expect=" + (parseInt(value['expect']) + 1), function(err, rows) {
+            if (!err && rows.length > 0) {
+                Main_obj.attendue = { data:[{ expect: (parseInt(value['expect']) + 1), code: rows[0]['content'], time: new Date().Format('yyyy-MM-dd hh:mm:ss')}]};
+                //Main_obj.attendue = [{ expect: (parseInt(value['expect']) + 1), code: rows[0]['content'], time: Date.parse(new Date())/1000 }];
             }
-            callback([_expect, _is_time], Main_obj);
+            callback([value['expect'], value['time']], Main_obj);
         });
     });
 }
 
 function action() {
-    var project = Info['project'].split(','),
+    var project = ['cp'],
         _time_config = Config.time,
         now_expect,
         _urls = Info.host.split(',');
@@ -45,21 +52,22 @@ function action() {
     for (var i in project) {
         _type_array = Info[project[i]].split(',');
         for (var j = 0, k = _type_array.length; j < k; j++) {
-            if (_type_array[j] == 'jczq') {
-                // 五分钟 3000 秒,执行投注列表采集，及采集比赛结果并派奖
-                if (chat_expect.other.jczq == 0 || chat_expect.other.jczq / 300 > 1) {
-                    (new jczqList).getData();
-                    (new jczq_prize).getData();
-                }
-                (chat_expect.other.jczq / 300 > 1) ? (chat_expect.other.jczq = 1) : (chat_expect.other.jczq += parseInt(Info.time));
-                continue;
-            }
+            // if (_type_array[j] == 'jczq') {
+            //     // 五分钟 3000 秒,执行投注列表采集，及采集比赛结果并派奖
+            //     if (chat_expect.other.jczq == 0 || chat_expect.other.jczq / 300 > 1) {
+            //         (new jczqList).getData();
+            //         (new jczq_prize).getData();
+            //     }
+            //     (chat_expect.other.jczq / 300 > 1) ? (chat_expect.other.jczq = 1) : (chat_expect.other.jczq += parseInt(Info.time));
+            //     continue;
+            // }
             now_expect = getNowExpect(_time_config[project[i]][_type_array[j]], _type_array[j], project[i]);
             if (!now_expect) {
                 continue;
             }
             Main_obj = new Main;
             Main_obj.project = project[i];
+            Main_obj.redis_client = redis_client;
             Main_obj.type = _type_array[j];
             Main_obj.bm = _time_config[project[i]][_type_array[j]].type;
             Main_obj.category = _time_config[project[i]][_type_array[j]].category;
@@ -68,26 +76,42 @@ function action() {
             /* if((_type_array[j] in chat_expect[project[i]])) console.log(Main_obj.name + '------' + chat_expect[project[i]][_type_array[j]][0] + '---' + now_expect + '------' + chat_expect[project[i]][_type_array[j]][1]); // 执行采集名字、缓存的最新期数、计算得出最新期数、最新期数开奖时间 */
             // 这里每个彩种第一次运行程序时都会去采集，以填补之前没采集到的最近几期，以及获得每个彩种的数据库最新期数，并缓存起来，用于决定下次是否执行采集
             // 每次到了下一期，也就是计算出的期号和缓存期号不符时，要执行操作，并从数据库中获得最新期数，并缓存，达到检测是否采集到最新一期数据的目的
+				//console.log(_type_array[j]);
+			
             if (!(_type_array[j] in chat_expect[project[i]]) || chat_expect[project[i]][_type_array[j]][0] != now_expect) {
+				
                 runAsync(function(_data, Main_obj) {
+
                     Main_obj.expect = _data[0];
                     // 这里如果没有获取到数据,就切换采集接口
+				
+				
                     if (Main_obj.type in chat_expect[Main_obj.project] && _data[0] <= chat_expect[Main_obj.project][Main_obj.type][0]) {
+					
+						//console.log(chat_expect.host);
+					
+						//console.log('----------------');
                         if (chat_expect.host >= _urls.length - 1) {
                             chat_expect.host = 0;
                         } else {
                             chat_expect.host++;
                         }
                     }
+				
+
                     Main_obj.url = _urls[chat_expect.host];
+				
                     if (!(Main_obj.type in chat_expect[Main_obj.project]) || _data[0] <= chat_expect[Main_obj.project][Main_obj.type][0]) {
+						//console.log('++++++++++++++++');
                         Main_obj.main();
                     }
+
                     chat_expect[Main_obj.project][Main_obj.type] = _data;
                 }, Main_obj);
             }
         }
     }
+
     setTimeout(action, Info.time * 1000);
 }
 
@@ -161,4 +185,29 @@ function getNowExpect(_time_config, type, project) {
         return get_num;
     }
 }
-action();
+
+/**
+ *  这里第一次执行时，初始化缓存数据
+ */
+_type_array = Info['cp'].split(',');
+redis_client.del('collection_client_data_' + Info['local']);
+_all_lottery = 0;
+for (let j = 0, k = _type_array.length; j < k; j++) {
+    Conn.query("SELECT expect,create_time as time FROM lottery_code WHERE type=" + Config.time['cp'][_type_array[j]].type + " ORDER BY expect DESC LIMIT 1", function(err, rows) {
+        if(err || rows.length < 1){
+            _data = {
+                'expect': 0,
+                'time': 0
+            };
+        }else{
+            _data = rows[0];
+        }
+        redis_client.hset('collection_client_data_' + Info['local'],Config.time['cp'][_type_array[j]].type,JSON.stringify(_data),function(err,v){
+            _all_lottery++;
+            if(_all_lottery == _type_array.length){
+                console.log('--> 采集器启动成功');
+                action();
+            }
+        });
+    });
+}

@@ -9,7 +9,6 @@
         'is' => false,
         'repeat' => false
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'hltb',
       'list' => [
@@ -24,7 +23,6 @@
         'is' => false,
         'repeat' => true
       ],
-      'table' => 'code1',
       'field' => 'code,expect,time',
       'type' => 'brnn',
       'list' => [

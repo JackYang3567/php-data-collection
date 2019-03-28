@@ -2,7 +2,6 @@
 
   return [
       'ssq' => [
-          'table' => 'code',
           'field' => 'code,expect,time',
           'type' => 'ssq',
           'list' => [
@@ -30,7 +29,6 @@
         ]
       ],
       'dlt' => [
-          'table' => 'code',
           'field' => 'code,expect,time',
           'type' => 'dlt',
           'list' => [
@@ -58,7 +56,6 @@
         ]
       ],
       'sd' => [
-          'table' => 'code',
           'field' => 'code,expect,time',
           'type' => 'sd',
           'list' => [
@@ -87,7 +84,6 @@
         ]
       ],
       'qlc' => [
-          'table' => 'code',
           'field' => 'code,expect,time',
           'type' => 'qlc',
           'list' => [
@@ -116,7 +112,6 @@
         ]
       ],
       'swxw' => [
-          'table' => 'code',
           'field' => 'code,expect,time',
           'type' => 'swxw',
           'list' => [
@@ -145,7 +140,6 @@
         ]
       ],
       'qxc' => [
-          'table' => 'code',
           'field' => 'code,expect,time',
           'type' => 'qxc',
           'list' => [
@@ -173,7 +167,6 @@
         ]
       ],
       'pls' => [
-          'table' => 'code',
           'field' => 'code,expect,time',
           'type' => 'pls',
           'list' => [
@@ -201,7 +194,6 @@
         ]
       ],
       'plw' => [
-          'table' => 'code',
           'field' => 'code,expect,time',
           'type' => 'plw',
           'list' => [

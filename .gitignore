@@ -6,7 +6,7 @@ uploads
 vendor
 .DS_Store
 node_server/node_modules/
-node_wt/node_modules/
+node_wt/wewqee/node_modules/
 
 /dist/
 npm-debug.log*
